@@ -1,51 +1,36 @@
-import React, { useState, useContext } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import React, { useContext, useState, useEffect } from "react";
 import { ExpenseContext } from "../context/ExpenseContext";
-import { v4 as uuidv4 } from 'uuid';
 
 const ExpenseForm = () => {
-  const { addExpense } = useContext(ExpenseContext);
+  const { addExpense, editing, updateExpense } = useContext(ExpenseContext);
+  const [form, setForm] = useState({ title: "", amount: "", category: "", date: "" });
 
-  const [title, setTitle] = useState("");
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(null);
-  const [category, setCategory] = useState("");
+  useEffect(() => {
+    if (editing) setForm(editing);
+  }, [editing]);
 
-  const isFormValid = title && amount && date && category;
+  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault();
-    if (!isFormValid) return;
+    const { title, amount, category, date } = form;
+    if (!title || !amount || !category || !date) {
+      return alert("All fields are required.");
+    }
 
-    addExpense({
-      id: uuidv4(),
-      title,
-      amount: parseFloat(amount),
-      date: date.toISOString(),
-      category,
-    });
+    if (editing) updateExpense(editing._id, form);
+    else addExpense(form);
 
-    setTitle("");
-    setAmount("");
-    setDate(null);
-    setCategory("");
+    setForm({ title: "", amount: "", category: "", date: "" });
   };
 
   return (
-    <form className="p-4 bg-white shadow rounded mb-4" onSubmit={handleSubmit}>
-      <input className="w-full mb-2 p-2 border" placeholder="Expense Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-      <input className="w-full mb-2 p-2 border" placeholder="Amount (TK)" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
-      <DatePicker className="w-full mb-2 p-2 border" selected={date} onChange={setDate} placeholderText="Select date" dateFormat="dd-MM-yyyy" />
-      <select className="w-full mb-2 p-2 border" value={category} onChange={(e) => setCategory(e.target.value)}>
-        <option value="">Select Category</option>
-        <option>Food</option>
-        <option>Travel</option>
-        <option>Entertainment</option>
-        <option>Bills</option>
-        <option>Others</option>
-      </select>
-      <button className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50" disabled={!isFormValid}>Add Expense</button>
+    <form onSubmit={handleSubmit} className="space-y-3 mb-4 bg-white p-4 rounded shadow">
+      <input name="title" placeholder="Title" value={form.title} onChange={handleChange} className="w-full p-2 border rounded" />
+      <input name="amount" type="number" placeholder="Amount" value={form.amount} onChange={handleChange} className="w-full p-2 border rounded" />
+      <input name="category" placeholder="Category" value={form.category} onChange={handleChange} className="w-full p-2 border rounded" />
+      <input name="date" type="date" value={form.date} onChange={handleChange} className="w-full p-2 border rounded" />
+      <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded w-full">{editing ? "Update" : "Add"} Expense</button>
     </form>
   );
 };

@@ -2,26 +2,20 @@ import React, { useContext } from "react";
 import { ExpenseContext } from "../context/ExpenseContext";
 
 const ExpenseList = () => {
-  const { expenses, deleteExpense, filters } = useContext(ExpenseContext);
-
-  const filtered = expenses.filter((expense) => {
-    const matchesCategory = filters.category ? expense.category === filters.category : true;
-    const [start, end] = filters.dateRange;
-    const expenseDate = new Date(expense.date);
-    const matchesDate = (!start || expenseDate >= start) && (!end || expenseDate <= end);
-    return matchesCategory && matchesDate;
-  });
+  const { expenses, deleteExpense, setEditing } = useContext(ExpenseContext);
 
   return (
-    <div className="grid gap-2">
-      {filtered.map((expense) => (
-        <div key={expense._id} className="bg-gray-100 p-3 flex justify-between items-center rounded shadow">
+    <div className="space-y-2">
+      {expenses.map(exp => (
+        <div key={exp._id} className="flex justify-between bg-gray-100 p-3 rounded shadow-sm">
           <div>
-            <div><strong>{expense.title}</strong> - ৳{expense.amount}</div>
-            <div>{new Date(expense.date).toLocaleDateString("en-GB")}</div>
-            <div>{expense.category}</div>
+            <div className="font-semibold">{exp.title} - ৳{exp.amount}</div>
+            <div className="text-sm text-gray-500">{exp.category} | {new Date(exp.date).toLocaleDateString()}</div>
           </div>
-          <button onClick={() => deleteExpense(expense._id)} className="text-red-500">Delete</button>
+          <div className="space-x-2">
+            <button onClick={() => setEditing(exp)} className="text-yellow-600">Edit</button>
+            <button onClick={() => deleteExpense(exp._id)} className="text-red-600">Delete</button>
+          </div>
         </div>
       ))}
     </div>

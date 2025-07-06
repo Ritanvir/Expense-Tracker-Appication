@@ -5,37 +5,34 @@ export const ExpenseContext = createContext();
 
 export const ExpenseProvider = ({ children }) => {
   const [expenses, setExpenses] = useState([]);
-  const [filters, setFilters] = useState({ category: "", dateRange: [null, null] });
+  const [editing, setEditing] = useState(null);
 
-  // Fetch from backend
   useEffect(() => {
     axios.get("http://localhost:5000/api/expenses")
       .then(res => setExpenses(res.data))
-      .catch(err => console.error("Error fetching expenses:", err));
+      .catch(err => console.error("Error fetching:", err));
   }, []);
 
-  // Add new expense
   const addExpense = async (expense) => {
-    try {
-      const res = await axios.post("http://localhost:5000/api/expenses", expense);
-      setExpenses(prev => [...prev, res.data]);
-    } catch (err) {
-      console.error("Add expense error:", err);
-    }
+    const res = await axios.post("http://localhost:5000/api/expenses", expense);
+    setExpenses([...expenses, res.data]);
   };
 
-  // Delete expense
   const deleteExpense = async (id) => {
-    try {
-      await axios.delete(`http://localhost:5000/api/expenses/${id}`);
-      setExpenses(prev => prev.filter(e => e._id !== id));
-    } catch (err) {
-      console.error("Delete expense error:", err);
-    }
+    await axios.delete(`http://localhost:5000/api/expenses/${id}`);
+    setExpenses(expenses.filter(e => e._id !== id));
+  };
+
+  const updateExpense = async (id, updated) => {
+    const res = await axios.put(`http://localhost:5000/api/expenses/${id}`, updated);
+    setExpenses(expenses.map(e => (e._id === id ? res.data : e)));
+    setEditing(null);
   };
 
   return (
-    <ExpenseContext.Provider value={{ expenses, addExpense, deleteExpense, filters, setFilters }}>
+    <ExpenseContext.Provider value={{
+      expenses, addExpense, deleteExpense, updateExpense, editing, setEditing
+    }}>
       {children}
     </ExpenseContext.Provider>
   );
